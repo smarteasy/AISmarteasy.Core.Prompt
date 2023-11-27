@@ -14,4 +14,8 @@
     <ProjectReference Include="..\..\AISmarteasy.Core\AISmarteasy.Core\AISmarteasy.Core.csproj" />
   </ItemGroup>
 
+	<ItemGroup>
+		<InternalsVisibleTo Include="AISmarteasy.Core.Prompt.Test" />
+	</ItemGroup>
+
 </Project>
