@@ -2,32 +2,31 @@
 
 namespace AISmarteasy.Core.Prompt.Template;
 
-internal sealed class CodeBlock : Block//, ICodeBlock
+internal sealed class PlaceHolderBlock : Block
 {
     private bool _validated;
-    //private readonly IFunctionRenderer _functionRenderer;
-    private readonly List<Block> _blocks;
+    private readonly FunctionRenderer _functionRenderer;
+    private readonly List<IBlock> _blocks;
 
-    public CodeBlock(string text, ILoggerFactory? loggerFactory)
-        : this(null, text.Trim(), loggerFactory)//new CodeTokenizer(loggerFactory).Tokenize(text), text.Trim(), loggerFactory)
-        //: this(BlockTypeKind.Code, new CodeTokenizer(loggerFactory).Tokenize(text), text.Trim(), loggerFactory)
+    public PlaceHolderBlock(List<IBlock> blocks, ILoggerFactory? loggerFactory)
+        : this(blocks, string.Empty, loggerFactory)
     {
     }
 
-    public CodeBlock(List<Block> blocks, string text, ILoggerFactory? loggerFactory)
-        : base(BlockTypeKind.Code, text.Trim(), loggerFactory)
+    public PlaceHolderBlock(List<IBlock> blocks, string text, ILoggerFactory? loggerFactory)
+        : base(BlockTypeKind.PlaceHolder, text, loggerFactory)
     {
-        //_functionRenderer = new FunctionRenderer();
         _blocks = blocks;
+        _functionRenderer = new FunctionRenderer();
     }
 
     public override bool IsValid(out string errorMsg)
     {
         errorMsg = "";
 
-        foreach (var token in _blocks)
+        foreach (var block in _blocks)
         {
-            if (!token.IsValid(out errorMsg))
+            if (!block.IsValid(out errorMsg))
             {
                 Logger.LogError(errorMsg);
                 return false;
@@ -69,10 +68,9 @@ internal sealed class CodeBlock : Block//, ICodeBlock
         {
             return _blocks[0].Type switch
             {
-                //BlockTypeKind.Value => ((INonFunctionRenderer)_blocks[0]).Render(variables),
-                //BlockTypeKind.Variable => ((INonFunctionRenderer)_blocks[0]).Render(variables),
-                //BlockTypeKind.FunctionId => await _functionRenderer.RenderAsync(_blocks, cancellationToken)
-                //    .ConfigureAwait(false),
+                BlockTypeKind.Value => _blocks[0].Render(variables),
+                BlockTypeKind.Variable => _blocks[0].Render(variables),
+                BlockTypeKind.FunctionId => await _functionRenderer.RenderAsync(_blocks, cancellationToken).ConfigureAwait(false),
                 _ => throw new CoreException($"Unexpected first token type: {_blocks[0].Type:G}")
             };
         }

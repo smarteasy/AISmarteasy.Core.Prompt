@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace AISmarteasy.Core.Prompt.Template;
 
-internal abstract class Block
+internal abstract class Block : IBlock
 {
     public BlockTypeKind Type { get; }
 

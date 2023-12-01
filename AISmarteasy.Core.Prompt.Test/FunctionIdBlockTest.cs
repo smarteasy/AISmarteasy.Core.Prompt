@@ -1,95 +1,43 @@
-﻿//// Copyright (c) Microsoft. All rights reserved.
+﻿using AISmarteasy.Core.Prompt.Template;
+using Microsoft.Extensions.Logging.Abstractions;
 
-//using Microsoft.Extensions.Logging.Abstractions;
-//using Microsoft.SemanticKernel;
-//using Microsoft.SemanticKernel.TemplateEngine.Blocks;
-//using Xunit;
+namespace AISmarteasy.Core.Prompt.Test;
 
-//namespace SemanticKernel.UnitTests.TemplateEngine.Blocks;
+public class FunctionIdBlockTest
+{
+    [Test]
+    public void ItHasTheCorrectType()
+    {
+        var target = new FunctionIdBlock("");
+        Assert.That(target.Type, Is.EqualTo(BlockTypeKind.FunctionId));
+    }
 
-//public class FunctionIdBlockTest
-//{
-//    [Fact]
-//    public void ItHasTheCorrectType()
-//    {
-//        // Act
-//        var target = new FunctionIdBlock("", NullLoggerFactory.Instance);
+    [Test]
+    public void ItTrimsSpaces()
+    {
+        Assert.That(new FunctionIdBlock("  aa  ", NullLoggerFactory.Instance).Content, Is.EqualTo("aa"));
+    }
 
-//        // Assert
-//        Assert.Equal(BlockTypes.FunctionId, target.Type);
-//    }
+    [Test]
+    public void ItAllowsUnderscoreDotsLettersAndDigits()
+    {
+        Assert.True(new FunctionIdBlock("0").IsValid(out _));
+        Assert.False(new FunctionIdBlock("-").IsValid(out _));
+        Assert.False(new FunctionIdBlock("a b").IsValid(out _));
+        Assert.False(new FunctionIdBlock("a\nb").IsValid(out _));
+    }
 
-//    [Fact]
-//    public void ItTrimsSpaces()
-//    {
-//        // Act + Assert
-//        Assert.Equal("aa", new FunctionIdBlock("  aa  ", NullLoggerFactory.Instance).Content);
-//    }
+    [Test]
+    public void ItAllowsOnlyOneDot()
+    {
+        var target1 = new FunctionIdBlock("functionName");
+        var target2 = new FunctionIdBlock("pluginName.functionName");
+        Assert.Throws<CoreException>(() =>
+        {
+            var _ = new FunctionIdBlock("foo.pluginName.functionName");
+        });
 
-//    [Theory]
-//    [InlineData("0", true)]
-//    [InlineData("1", true)]
-//    [InlineData("a", true)]
-//    [InlineData("_", true)]
-//    [InlineData("01", true)]
-//    [InlineData("01a", true)]
-//    [InlineData("a01", true)]
-//    [InlineData("_0", true)]
-//    [InlineData("a01_", true)]
-//    [InlineData("_a01", true)]
-//    [InlineData(".", true)]
-//    [InlineData("a.b", true)]
-//    [InlineData("-", false)]
-//    [InlineData("a b", false)]
-//    [InlineData("a\nb", false)]
-//    [InlineData("a\tb", false)]
-//    [InlineData("a\rb", false)]
-//    [InlineData("a,b", false)]
-//    [InlineData("a-b", false)]
-//    [InlineData("a+b", false)]
-//    [InlineData("a~b", false)]
-//    [InlineData("a`b", false)]
-//    [InlineData("a!b", false)]
-//    [InlineData("a@b", false)]
-//    [InlineData("a#b", false)]
-//    [InlineData("a$b", false)]
-//    [InlineData("a%b", false)]
-//    [InlineData("a^b", false)]
-//    [InlineData("a*b", false)]
-//    [InlineData("a(b", false)]
-//    [InlineData("a)b", false)]
-//    [InlineData("a|b", false)]
-//    [InlineData("a{b", false)]
-//    [InlineData("a}b", false)]
-//    [InlineData("a[b", false)]
-//    [InlineData("a]b", false)]
-//    [InlineData("a:b", false)]
-//    [InlineData("a;b", false)]
-//    [InlineData("a'b", false)]
-//    [InlineData("a\"b", false)]
-//    [InlineData("a<b", false)]
-//    [InlineData("a>b", false)]
-//    [InlineData("a/b", false)]
-//    [InlineData("a\\b", false)]
-//    public void ItAllowsUnderscoreDotsLettersAndDigits(string name, bool isValid)
-//    {
-//        // Arrange
-//        var target = new FunctionIdBlock($" {name} ");
-
-//        // Act + Assert
-//        Assert.Equal(isValid, target.IsValid(out _));
-//    }
-
-//    [Fact]
-//    public void ItAllowsOnlyOneDot()
-//    {
-//        // Arrange
-//        var target1 = new FunctionIdBlock("functionName");
-//        var target2 = new FunctionIdBlock("pluginName.functionName");
-//        Assert.Throws<SKException>(() => new FunctionIdBlock("foo.pluginName.functionName"));
-
-//        // Act + Assert
-//        Assert.True(target1.IsValid(out _));
-//        Assert.True(target2.IsValid(out _));
-//    }
-//}
+        Assert.True(target1.IsValid(out _));
+        Assert.True(target2.IsValid(out _));
+    }
+}
