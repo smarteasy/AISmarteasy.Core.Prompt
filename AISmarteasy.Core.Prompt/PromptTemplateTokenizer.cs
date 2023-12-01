@@ -5,31 +5,19 @@ namespace AISmarteasy.Core.Prompt;
 
 public sealed class PromptTemplateTokenizer
 {
-    public PromptTemplateTokenizer()
+    public PromptTemplateTokenizer(ILoggerFactory? loggerFactory)
     {
-        _loggerFactory = LoggerFactoryProvider.Default;
-        _codeTokenizer = new PlaceHolderTokenizer(_loggerFactory);
+        _loggerFactory = loggerFactory?? LoggerFactoryProvider.Default;
+        _placeHolderTokenizer = new PlaceHolderTokenizer(_loggerFactory);
     }
 
-    public IList<IBlock> Tokenize(string text)
+    public IList<IBlock> Tokenize(string promptTemplate)
     {
         const int Empty_CodeBlock_Length = 4;
-        const int Min_CodeBlock_Length = Empty_CodeBlock_Length + 1;
-
-        if (string.IsNullOrEmpty(text))
-        {
-            return new List<IBlock> { new TextBlock(string.Empty, _loggerFactory) };
-        }
-
-        if (text.Length < Min_CodeBlock_Length)
-        {
-            return new List<IBlock> { new TextBlock(text, _loggerFactory) };
-        }
 
         var blocks = new List<IBlock>();
 
         var endOfLastBlock = 0;
-
         var blockStartPos = 0;
         var blockStartFound = false;
 
@@ -37,13 +25,13 @@ public sealed class PromptTemplateTokenizer
         var textValueDelimiter = '\0';
 
         var skipNextChar = false;
-        var nextChar = text[0];
+        var nextChar = promptTemplate[0];
 
-        for (var nextCharCursor = 1; nextCharCursor < text.Length; nextCharCursor++)
+        for (var nextCharCursor = 1; nextCharCursor < promptTemplate.Length; nextCharCursor++)
         {
             var currentCharPos = nextCharCursor - 1;
             var currentChar = nextChar;
-            nextChar = text[nextCharCursor];
+            nextChar = promptTemplate[nextCharCursor];
 
             if (skipNextChar)
             {
@@ -83,10 +71,10 @@ public sealed class PromptTemplateTokenizer
                     {
                         if (blockStartPos > endOfLastBlock)
                         {
-                            blocks.Add(new TextBlock(text, endOfLastBlock, blockStartPos, _loggerFactory));
+                            blocks.Add(new TextBlock(promptTemplate, endOfLastBlock, blockStartPos, _loggerFactory));
                         }
 
-                        var contentWithDelimiters = SubStr(text, blockStartPos, nextCharCursor + 1);
+                        var contentWithDelimiters = SubStr(promptTemplate, blockStartPos, nextCharCursor + 1);
 
                         var contentWithoutDelimiters = contentWithDelimiters
                             .Substring(2, contentWithDelimiters.Length - Empty_CodeBlock_Length)
@@ -98,7 +86,7 @@ public sealed class PromptTemplateTokenizer
                         }
                         else
                         {
-                            var placeHolderBlocks = _codeTokenizer.Tokenize(contentWithoutDelimiters);
+                            var placeHolderBlocks = _placeHolderTokenizer.Tokenize(contentWithoutDelimiters);
 
                             switch (placeHolderBlocks[0].Type)
                             {
@@ -127,7 +115,7 @@ public sealed class PromptTemplateTokenizer
                                 case BlockTypeKind.Text:
                                 case BlockTypeKind.PlaceHolder:
                                 default:
-                                    throw new CoreException($"Code tokenizer returned an incorrect first token type {placeHolderBlocks[0].Type:G}");
+                                    throw new CoreException($"Placeholder tokenizer returned an incorrect first token type {placeHolderBlocks[0].Type:G}");
                             }
                         }
 
@@ -138,16 +126,16 @@ public sealed class PromptTemplateTokenizer
             }
         }
 
-        if (endOfLastBlock < text.Length)
+        if (endOfLastBlock < promptTemplate.Length)
         {
-            blocks.Add(new TextBlock(text, endOfLastBlock, text.Length, _loggerFactory));
+            blocks.Add(new TextBlock(promptTemplate, endOfLastBlock, promptTemplate.Length, _loggerFactory));
         }
 
         return blocks;
     }
 
     private readonly ILoggerFactory _loggerFactory;
-    private readonly PlaceHolderTokenizer _codeTokenizer;
+    private readonly PlaceHolderTokenizer _placeHolderTokenizer;
 
     private static string SubStr(string text, int startIndex, int stopIndex)
     {

@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 
 namespace AISmarteasy.Core.Prompt.Template;
 
-internal sealed class NamedArgBlock : Block//, INonFunctionRenderer
+internal sealed class NamedArgBlock : Block
 {
     internal string Name { get; }
 
@@ -108,5 +108,22 @@ internal sealed class NamedArgBlock : Block//, INonFunctionRenderer
         }
 
         return result;
+    }
+
+    internal string GetValue(ContextVariableDictionary? variables)
+    {
+        var valueIsValidValBlock = _valBlock != null && _valBlock.IsValid(out var errorMessage);
+        if (valueIsValidValBlock)
+        {
+            return _valBlock!.Render(variables);
+        }
+
+        var valueIsValidVarBlock = _argValueAsVarBlock != null && _argValueAsVarBlock.IsValid(out var errorMessage2);
+        if (valueIsValidVarBlock)
+        {
+            return _argValueAsVarBlock!.Render(variables);
+        }
+
+        return string.Empty;
     }
 }

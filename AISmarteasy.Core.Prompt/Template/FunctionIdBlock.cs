@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 
 namespace AISmarteasy.Core.Prompt.Template;
 
-internal sealed class FunctionIdBlock : Block//, INonFunctionRenderer
+internal sealed class FunctionIdBlock : Block
 {
     internal string PluginName { get; } = string.Empty;
 

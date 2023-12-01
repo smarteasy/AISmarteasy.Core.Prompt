@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 
 namespace AISmarteasy.Core.Prompt.Template;
 
-internal sealed class VariableBlock : Block//, INonCodeBlock, INonFunctionRenderer
+internal sealed class VariableBlock : Block
 {
     public string Name { get; } = string.Empty;
     private static readonly Regex ValidNameRegex = new("^[a-zA-Z0-9_]*$");

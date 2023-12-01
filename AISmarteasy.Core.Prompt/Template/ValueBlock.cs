@@ -2,7 +2,7 @@
 
 namespace AISmarteasy.Core.Prompt.Template;
 
-internal sealed class ValueBlock : Block//, INonCodeBlock, INonFunctionRenderer
+internal sealed class ValueBlock : Block
 {
     private readonly char _first = '\0';
     private readonly char _last = '\0';

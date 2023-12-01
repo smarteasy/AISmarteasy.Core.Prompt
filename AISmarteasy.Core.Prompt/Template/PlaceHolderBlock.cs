@@ -50,11 +50,6 @@ internal sealed class PlaceHolderBlock : Block
         return true;
     }
 
-    public override string Render(ContextVariableDictionary? variables)
-    {
-        return string.Empty;
-    }
-
     public async Task<string> RenderAsync(ContextVariableDictionary variables, bool isNeedFunctionRun, CancellationToken cancellationToken = default)
     {
         if (!_validated && !IsValid(out var error))
@@ -64,19 +59,19 @@ internal sealed class PlaceHolderBlock : Block
 
         Logger.LogTrace("Rendering code: `{Content}`", Content);
 
-        if (isNeedFunctionRun)
+        switch (_blocks[0].Type)
         {
-            return _blocks[0].Type switch
+            case BlockTypeKind.NamedArg:
+            case BlockTypeKind.Variable:
+                return _blocks[0].Render(variables);
+            case BlockTypeKind.FunctionId:
             {
-                BlockTypeKind.Value => _blocks[0].Render(variables),
-                BlockTypeKind.Variable => _blocks[0].Render(variables),
-                BlockTypeKind.FunctionId => await _functionRenderer.RenderAsync(_blocks, cancellationToken).ConfigureAwait(false),
-                _ => throw new CoreException($"Unexpected first token type: {_blocks[0].Type:G}")
-            };
-        }
-        else
-        {
-            return "{{" + Content + "}}";
+                if (isNeedFunctionRun)
+                    return await _functionRenderer.RenderAsync(_blocks, cancellationToken).ConfigureAwait(false);
+                return "{{" + Content + "}}";
+            }
+            default:
+                throw new CoreException($"Unexpected first token type: {_blocks[0].Type:G}");
         }
     }
 
