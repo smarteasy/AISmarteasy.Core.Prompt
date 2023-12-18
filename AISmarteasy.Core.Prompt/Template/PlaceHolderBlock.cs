@@ -68,7 +68,7 @@ internal sealed class PlaceHolderBlock : Block
             {
                 if (isNeedFunctionRun)
                 {
-                    var requestSetting = new LLMRequestSetting();
+                    var requestSetting = new LLMServiceSetting();
                     return await _functionRenderer.RenderAsync(_blocks, requestSetting, cancellationToken).ConfigureAwait(false);
                 }
                 return "{{" + Content + "}}";

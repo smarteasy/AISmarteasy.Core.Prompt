@@ -7,7 +7,7 @@ public class FunctionRenderer(ILogger? logger)
 {
     private readonly ILogger _logger = logger?? LoggerFactoryProvider.Default.CreateLogger(typeof(FunctionRenderer));
 
-    public async Task<string> RenderAsync(IList<IBlock> blocks, LLMRequestSetting requestSetting, CancellationToken cancellationToken = default)
+    public async Task<string> RenderAsync(IList<IBlock> blocks, LLMServiceSetting serviceSetting, CancellationToken cancellationToken = default)
     {
         var functionBlock = (FunctionIdBlock)blocks[0];
         var function = GetFunctionFromPlugins(functionBlock);
@@ -25,7 +25,7 @@ public class FunctionRenderer(ILogger? logger)
 
         try
         {
-            await function.RunAsync(requestSetting, cancellationToken).ConfigureAwait(false);
+            await function.RunAsync(serviceSetting, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
