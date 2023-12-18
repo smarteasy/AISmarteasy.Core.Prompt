@@ -1,25 +1,27 @@
 ﻿using AISmarteasy.Core.Prompt.Template;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using static System.Reflection.Metadata.BlobBuilder;
 
 namespace AISmarteasy.Core.Prompt.Test;
 
 public class PlaceHolderBlockTest
 {
+    private readonly ILogger _logger = NullLogger.Instance;
+
     [Test]
     public void ItRequiresAValidFunctionCall()
     {
-        var funcId = new FunctionIdBlock("funcName");
-        var valBlock = new ValueBlock("'value'");
-        var varBlock = new VariableBlock("$var");
-        var namedArgBlock = new NamedArgBlock("varName='foo'");
+        var funcId = new FunctionIdBlock("funcName", _logger);
+        var valBlock = new ValueBlock("'value'", _logger);
+        var varBlock = new VariableBlock("$var", _logger);
+        var namedArgBlock = new NamedArgBlock("varName='foo'", _logger);
 
-        var placeHolderBlock1 = new PlaceHolderBlock(new List<IBlock> { funcId, valBlock }, null);
-        var placeHolderBlock2 = new PlaceHolderBlock(new List<IBlock> { funcId, varBlock }, null);
-        var placeHolderBlock3 = new PlaceHolderBlock(new List<IBlock> { funcId, funcId }, null);
-        var placeHolderBlock5 = new PlaceHolderBlock(new List<IBlock> { funcId, varBlock, namedArgBlock }, null);
-        var placeHolderBlock6 = new PlaceHolderBlock(new List<IBlock> { varBlock, valBlock }, null);
-        var placeHolderBlock7 = new PlaceHolderBlock(new List<IBlock> { namedArgBlock }, null);
+        var placeHolderBlock1 = new PlaceHolderBlock(new List<IBlock> { funcId, valBlock }, _logger);
+        var placeHolderBlock2 = new PlaceHolderBlock(new List<IBlock> { funcId, varBlock }, _logger);
+        var placeHolderBlock3 = new PlaceHolderBlock(new List<IBlock> { funcId, funcId }, _logger);
+        var placeHolderBlock5 = new PlaceHolderBlock(new List<IBlock> { funcId, varBlock, namedArgBlock }, _logger);
+        var placeHolderBlock6 = new PlaceHolderBlock(new List<IBlock> { varBlock, valBlock }, _logger);
+        var placeHolderBlock7 = new PlaceHolderBlock(new List<IBlock> { namedArgBlock }, _logger);
 
         Assert.True(placeHolderBlock1.IsValid(out _));
         Assert.True(placeHolderBlock2.IsValid(out _));
@@ -47,9 +49,9 @@ public class PlaceHolderBlockTest
     public async Task ItRendersCodeBlockConsistingOfJustAVarBlock1Async()
     {
         var variables = new ContextVariableDictionary { ["varName"] = "foo" };
-        var placeHolderTokenizer = new PlaceHolderTokenizer();
+        var placeHolderTokenizer = new PlaceHolderTokenizer(_logger);
         var blocks = placeHolderTokenizer.Tokenize("$varName");
-        var placeHolderBlock = new PlaceHolderBlock(blocks, NullLoggerFactory.Instance);
+        var placeHolderBlock = new PlaceHolderBlock(blocks, _logger);
         var result = await placeHolderBlock.RenderAsync(variables, false);
 
         Assert.That(result, Is.EqualTo("foo"));
@@ -59,9 +61,9 @@ public class PlaceHolderBlockTest
     public async Task ItRendersCodeBlockConsistingOfJustAVarBlock2Async()
     {
         var variables = new ContextVariableDictionary { ["varName"] = "bar" };
-        var varBlock = new VariableBlock("$varName");
+        var varBlock = new VariableBlock("$varName", _logger);
 
-        var placeHolderBlock = new PlaceHolderBlock(new List<IBlock> { varBlock }, NullLoggerFactory.Instance);
+        var placeHolderBlock = new PlaceHolderBlock(new List<IBlock> { varBlock }, _logger);
         var result = await placeHolderBlock.RenderAsync(variables, false);
 
         Assert.That(result, Is.EqualTo("bar"));

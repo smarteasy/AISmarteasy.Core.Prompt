@@ -1,10 +1,13 @@
 using AISmarteasy.Core.Prompt.Template;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace AISmarteasy.Core.Prompt.Test
 {
     public class PromptTemplateTokenizerTest
     {
-        private readonly PromptTemplateTokenizer _target = new PromptTemplateTokenizer(null);
+        private readonly ILogger _logger = NullLogger.Instance;
+        private readonly PromptTemplateTokenizer _target = new PromptTemplateTokenizer(NullLogger.Instance);
 
         [Test]
         public void CanBePromptTemplate()
