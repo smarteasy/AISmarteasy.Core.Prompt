@@ -8,8 +8,8 @@ internal sealed class VariableBlock : Block
     public string Name { get; } = string.Empty;
     private static readonly Regex ValidNameRegex = new("^[a-zA-Z0-9_]*$");
 
-    public VariableBlock(string text, ILoggerFactory? loggerFactory = null)
-        : base(BlockTypeKind.Variable, text.Trim(), loggerFactory)
+    public VariableBlock(string text, ILogger logger)
+        : base(BlockTypeKind.Variable, text.Trim(), logger)
     {
         if (Content.Length < 2)
         {

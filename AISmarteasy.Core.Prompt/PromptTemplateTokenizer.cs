@@ -3,13 +3,10 @@ using Microsoft.Extensions.Logging;
 
 namespace AISmarteasy.Core.Prompt;
 
-public sealed class PromptTemplateTokenizer
+public sealed class PromptTemplateTokenizer(ILogger logger)
 {
-    public PromptTemplateTokenizer(ILoggerFactory? loggerFactory)
-    {
-        _loggerFactory = loggerFactory?? LoggerFactoryProvider.Default;
-        _placeHolderTokenizer = new PlaceHolderTokenizer(_loggerFactory);
-    }
+    private readonly ILogger _logger = logger;
+    private readonly PlaceHolderTokenizer _placeHolderTokenizer = new(logger);
 
     public IList<IBlock> Tokenize(string promptTemplate)
     {
@@ -71,7 +68,7 @@ public sealed class PromptTemplateTokenizer
                     {
                         if (blockStartPos > endOfLastBlock)
                         {
-                            blocks.Add(new TextBlock(promptTemplate, endOfLastBlock, blockStartPos, _loggerFactory));
+                            blocks.Add(new TextBlock(promptTemplate, endOfLastBlock, blockStartPos, logger));
                         }
 
                         var contentWithDelimiters = SubStr(promptTemplate, blockStartPos, nextCharCursor + 1);
@@ -82,7 +79,7 @@ public sealed class PromptTemplateTokenizer
 
                         if (contentWithoutDelimiters.Length == 0)
                         {
-                            blocks.Add(new TextBlock(contentWithDelimiters, _loggerFactory));
+                            blocks.Add(new TextBlock(contentWithDelimiters, logger));
                         }
                         else
                         {
@@ -109,7 +106,7 @@ public sealed class PromptTemplateTokenizer
                                     break;
 
                                 case BlockTypeKind.FunctionId:
-                                    blocks.Add(new PlaceHolderBlock(placeHolderBlocks, contentWithoutDelimiters, _loggerFactory));
+                                    blocks.Add(new PlaceHolderBlock(placeHolderBlocks, contentWithoutDelimiters, logger));
                                     break;
                                 case BlockTypeKind.Undefined:
                                 case BlockTypeKind.Text:
@@ -128,14 +125,11 @@ public sealed class PromptTemplateTokenizer
 
         if (endOfLastBlock < promptTemplate.Length)
         {
-            blocks.Add(new TextBlock(promptTemplate, endOfLastBlock, promptTemplate.Length, _loggerFactory));
+            blocks.Add(new TextBlock(promptTemplate, endOfLastBlock, promptTemplate.Length, _logger));
         }
 
         return blocks;
     }
-
-    private readonly ILoggerFactory _loggerFactory;
-    private readonly PlaceHolderTokenizer _placeHolderTokenizer;
 
     private static string SubStr(string text, int startIndex, int stopIndex)
     {

@@ -3,36 +3,28 @@ using Microsoft.Extensions.Logging;
 
 namespace AISmarteasy.Core.Prompt;
 
-public class FunctionRenderer
+public class FunctionRenderer(ILogger? logger)
 {
-    private readonly IKernel _kernel;
-    private readonly ILogger _logger;
+    private readonly ILogger _logger = logger?? LoggerFactoryProvider.Default.CreateLogger(typeof(FunctionRenderer));
 
-    public FunctionRenderer()
+    public async Task<string> RenderAsync(IList<IBlock> blocks, LLMRequestSetting requestSetting, CancellationToken cancellationToken = default)
     {
-        _kernel = KernelProvider.Kernel;
-        _logger = LoggerFactoryProvider.Default.CreateLogger(typeof(FunctionRenderer));
-    }
-
-    public async Task<string> RenderAsync(IList<IBlock> blocks, CancellationToken cancellationToken = default)
-    {
-        var fBlock = (FunctionIdBlock)blocks[0];
-        var function = GetFunctionFromPlugins(fBlock);
+        var functionBlock = (FunctionIdBlock)blocks[0];
+        var function = GetFunctionFromPlugins(functionBlock);
         if (function == null)
         {
-            var errorMsg = $"Function `{fBlock.Content}` not found";
+            var errorMsg = $"Function `{functionBlock.Content}` not found";
             _logger.LogError(errorMsg);
             throw new CoreException(errorMsg);
         }
 
         if (blocks.Count > 1)
         {
-            _kernel.Context = PopulateContextWithFunctionArguments(blocks);
+            KernelProvider.Kernel.Context = PopulateContextWithFunctionArguments(blocks);
         }
 
         try
         {
-            var requestSetting = AIRequestSettingProvider.ProvideFromCompletionConfig(new PromptTemplateConfig().Completion);
             await function.RunAsync(requestSetting, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
@@ -41,18 +33,18 @@ public class FunctionRenderer
             throw;
         }
 
-        return _kernel.Context.Result;
+        return KernelProvider.Kernel.Context.Result;
     }
 
-    private IFunction GetFunctionFromPlugins(FunctionIdBlock functionBlock)
+    private IPluginFunction GetFunctionFromPlugins(FunctionIdBlock functionBlock)
     {
-        var plugin = _kernel.Plugins[functionBlock.PluginName];
+        var plugin = KernelProvider.Kernel.Plugins[functionBlock.PluginName];
         return plugin.GetFunction(functionBlock.FunctionName);
     }
 
     public IContext PopulateContextWithFunctionArguments(IList<IBlock> blocks)
     {
-        var contextClone = _kernel.Context.Clone();
+        var contextClone = KernelProvider.Kernel.Context.Clone();
         var firstArg = blocks[1];
 
         _logger.LogTrace("Passing variable/value: `{Content}`", firstArg.Content);
@@ -78,7 +70,7 @@ public class FunctionRenderer
 
             _logger.LogTrace("Passing variable/value: `{Content}`", arg.Content);
 
-            contextClone.Variables.Set(arg.Name, arg.GetValue(_kernel.Context.Variables));
+            contextClone.Variables.Set(arg.Name, arg.GetValue(KernelProvider.Kernel.Context.Variables));
         }
 
         return contextClone;

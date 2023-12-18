@@ -9,8 +9,8 @@ internal sealed class ValueBlock : Block
 
     public string Value { get; } = string.Empty;
 
-    public ValueBlock(string text, ILoggerFactory? loggerFactory = null)
-        : base(BlockTypeKind.Value, text.Trim(), loggerFactory)
+    public ValueBlock(string text, ILogger logger)
+        : base(BlockTypeKind.Value, text.Trim(), logger)
     {
         if (Content.Length < 2)
         {

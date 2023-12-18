@@ -9,8 +9,8 @@ internal sealed class FunctionIdBlock : Block
 
     internal string FunctionName { get; }
 
-    public FunctionIdBlock(string text, ILoggerFactory? loggerFactory = null)
-        : base(BlockTypeKind.FunctionId, text.Trim(), loggerFactory)
+    public FunctionIdBlock(string text, ILogger logger)
+        : base(BlockTypeKind.FunctionId, text.Trim(), logger)
     {
         var functionNameParts = Content.Split('.');
         if (functionNameParts.Length > 2)

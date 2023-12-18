@@ -2,19 +2,11 @@
 using System.Text;
 using AISmarteasy.Core.Prompt.Template;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace AISmarteasy.Core.Prompt;
 
-internal sealed class PlaceHolderTokenizer
+internal sealed class PlaceHolderTokenizer(ILogger logger)
 {
-    private readonly ILoggerFactory _loggerFactory;
-
-    public PlaceHolderTokenizer(ILoggerFactory? loggerFactory = null)
-    {
-        _loggerFactory = loggerFactory ?? NullLoggerFactory.Instance;
-    }
-
     public List<IBlock> Tokenize(string? text)
     {
         text = text?.Trim();
@@ -41,16 +33,16 @@ internal sealed class PlaceHolderTokenizer
             switch (nextChar)
             {
                 case Symbol.VAR_PREFIX:
-                    blocks.Add(new VariableBlock(text, _loggerFactory));
+                    blocks.Add(new VariableBlock(text, logger));
                     break;
 
                 case Symbol.DBL_QUOTE:
                 case Symbol.SGL_QUOTE:
-                    blocks.Add(new ValueBlock(text, _loggerFactory));
+                    blocks.Add(new ValueBlock(text, logger));
                     break;
 
                 default:
-                    blocks.Add(new FunctionIdBlock(text, _loggerFactory));
+                    blocks.Add(new FunctionIdBlock(text, logger));
                     break;
             }
 
@@ -102,14 +94,14 @@ internal sealed class PlaceHolderTokenizer
 
                 if (currentChar == textValueDelimiter && currentTokenType == BlockTypeKind.Value)
                 {
-                    blocks.Add(new ValueBlock(currentTokenContent.ToString(), this._loggerFactory));
+                    blocks.Add(new ValueBlock(currentTokenContent.ToString(), logger));
                     currentTokenContent.Clear();
                     currentTokenType = BlockTypeKind.Undefined;
                     spaceSeparatorFound = false;
                 }
                 else if (currentChar == namedArgValuePrefix && currentTokenType == BlockTypeKind.NamedArg)
                 {
-                    blocks.Add(new NamedArgBlock(currentTokenContent.ToString(), this._loggerFactory));
+                    blocks.Add(new NamedArgBlock(currentTokenContent.ToString(), logger));
                     currentTokenContent.Clear();
                     currentTokenType = BlockTypeKind.Undefined;
                     spaceSeparatorFound = false;
@@ -124,7 +116,7 @@ internal sealed class PlaceHolderTokenizer
             {
                 if (currentTokenType == BlockTypeKind.Variable)
                 {
-                    blocks.Add(new VariableBlock(currentTokenContent.ToString(), this._loggerFactory));
+                    blocks.Add(new VariableBlock(currentTokenContent.ToString(), logger));
                     currentTokenContent.Clear();
                     currentTokenType = BlockTypeKind.Undefined;
                 }
@@ -132,20 +124,20 @@ internal sealed class PlaceHolderTokenizer
                 {
                     var tokenContent = currentTokenContent.ToString();
 
-                    if (PlaceHolderTokenizer.IsValidNamedArg(tokenContent))
+                    if (IsValidNamedArg(tokenContent))
                     {
-                        blocks.Add(new NamedArgBlock(tokenContent, this._loggerFactory));
+                        blocks.Add(new NamedArgBlock(tokenContent, logger));
                     }
                     else
                     {
-                        blocks.Add(new FunctionIdBlock(tokenContent, this._loggerFactory));
+                        blocks.Add(new FunctionIdBlock(tokenContent, logger));
                     }
                     currentTokenContent.Clear();
                     currentTokenType = BlockTypeKind.Undefined;
                 }
                 else if (currentTokenType == BlockTypeKind.NamedArg && namedArgSeparatorFound && namedArgValuePrefix != 0)
                 {
-                    blocks.Add(new NamedArgBlock(currentTokenContent.ToString(), this._loggerFactory));
+                    blocks.Add(new NamedArgBlock(currentTokenContent.ToString(), logger));
                     currentTokenContent.Clear();
                     namedArgSeparatorFound = false;
                     namedArgValuePrefix = '\0';
@@ -211,26 +203,26 @@ internal sealed class PlaceHolderTokenizer
         switch (currentTokenType)
         {
             case BlockTypeKind.Value:
-                blocks.Add(new ValueBlock(currentTokenContent.ToString(), _loggerFactory));
+                blocks.Add(new ValueBlock(currentTokenContent.ToString(), logger));
                 break;
             case BlockTypeKind.Variable:
-                blocks.Add(new VariableBlock(currentTokenContent.ToString(), _loggerFactory));
+                blocks.Add(new VariableBlock(currentTokenContent.ToString(), logger));
                 break;
             case BlockTypeKind.FunctionId:
                 var tokenContent = currentTokenContent.ToString();
 
-                if (PlaceHolderTokenizer.IsValidNamedArg(tokenContent))
+                if (IsValidNamedArg(tokenContent))
                 {
-                    blocks.Add(new NamedArgBlock(tokenContent, _loggerFactory));
+                    blocks.Add(new NamedArgBlock(tokenContent, logger));
                 }
                 else
                 {
-                    blocks.Add(new FunctionIdBlock(currentTokenContent.ToString(), _loggerFactory));
+                    blocks.Add(new FunctionIdBlock(currentTokenContent.ToString(), logger));
                 }
                 break;
 
             case BlockTypeKind.NamedArg:
-                blocks.Add(new NamedArgBlock(currentTokenContent.ToString(), _loggerFactory));
+                blocks.Add(new NamedArgBlock(currentTokenContent.ToString(), logger));
                 break;
 
             case BlockTypeKind.Undefined:
@@ -262,11 +254,11 @@ internal sealed class PlaceHolderTokenizer
 
     [SuppressMessage("Design", "CA1031:Modify to catch a more specific allowed exception type, or rethrow exception",
     Justification = "Does not throw an exception by design.")]
-    private static bool IsValidNamedArg(string tokenContent)
+    private bool IsValidNamedArg(string tokenContent)
     {
         try
         {
-            var tokenContentAsNamedArg = new NamedArgBlock(tokenContent);
+            var tokenContentAsNamedArg = new NamedArgBlock(tokenContent, logger);
             return tokenContentAsNamedArg.IsValid(out _);
         }
         catch

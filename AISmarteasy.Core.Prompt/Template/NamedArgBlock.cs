@@ -7,7 +7,7 @@ internal sealed class NamedArgBlock : Block
 {
     internal string Name { get; }
 
-    public NamedArgBlock(string text, ILoggerFactory? logger = null)
+    public NamedArgBlock(string text, ILogger logger)
         : base(BlockTypeKind.NamedArg, TrimWhitespace(text), logger)
     {
         var argParts = Content.Split(Symbol.NAMED_ARG_BLOCK_SEPARATOR);
@@ -18,7 +18,7 @@ internal sealed class NamedArgBlock : Block
         }
 
         Name = argParts[0];
-        _argNameAsVarBlock = new VariableBlock($"{Symbol.VAR_PREFIX}{argParts[0]}");
+        _argNameAsVarBlock = new VariableBlock($"{Symbol.VAR_PREFIX}{argParts[0]}", logger);
         var argValue = argParts[1];
         if (argValue.Length == 0)
         {
@@ -28,11 +28,11 @@ internal sealed class NamedArgBlock : Block
 
         if (argValue[0] == Symbol.VAR_PREFIX)
         {
-            _argValueAsVarBlock = new VariableBlock(argValue);
+            _argValueAsVarBlock = new VariableBlock(argValue, logger);
         }
         else
         {
-            _valBlock = new ValueBlock(argValue);
+            _valBlock = new ValueBlock(argValue, logger);
         }
     }
 
@@ -112,13 +112,13 @@ internal sealed class NamedArgBlock : Block
 
     internal string GetValue(ContextVariableDictionary? variables)
     {
-        var valueIsValidValBlock = _valBlock != null && _valBlock.IsValid(out var errorMessage);
+        var valueIsValidValBlock = _valBlock != null && _valBlock.IsValid(out _);
         if (valueIsValidValBlock)
         {
             return _valBlock!.Render(variables);
         }
 
-        var valueIsValidVarBlock = _argValueAsVarBlock != null && _argValueAsVarBlock.IsValid(out var errorMessage2);
+        var valueIsValidVarBlock = _argValueAsVarBlock != null && _argValueAsVarBlock.IsValid(out _);
         if (valueIsValidVarBlock)
         {
             return _argValueAsVarBlock!.Render(variables);

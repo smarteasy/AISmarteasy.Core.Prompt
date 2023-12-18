@@ -1,17 +1,16 @@
-﻿using System.Xml.Linq;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 
 namespace AISmarteasy.Core.Prompt.Template;
 
 internal sealed class TextBlock : Block
 {
-    public TextBlock(string text, ILoggerFactory? loggerFactory = null)
-        : base(BlockTypeKind.Text, text, loggerFactory)
+    public TextBlock(string text, ILogger logger)
+        : base(BlockTypeKind.Text, text, logger)
     {
     }
 
-    public TextBlock(string text, int startIndex, int stopIndex, ILoggerFactory? loggerFactory)
-        : base(BlockTypeKind.Text, text.Substring(startIndex, stopIndex - startIndex), loggerFactory)
+    public TextBlock(string text, int startIndex, int stopIndex, ILogger logger)
+        : base(BlockTypeKind.Text, text.Substring(startIndex, stopIndex - startIndex), logger)
     {
     }
 

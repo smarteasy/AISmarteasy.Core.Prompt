@@ -8,16 +8,16 @@ internal sealed class PlaceHolderBlock : Block
     private readonly FunctionRenderer _functionRenderer;
     private readonly List<IBlock> _blocks;
 
-    public PlaceHolderBlock(List<IBlock> blocks, ILoggerFactory? loggerFactory)
-        : this(blocks, string.Empty, loggerFactory)
+    public PlaceHolderBlock(List<IBlock> blocks, ILogger logger)
+        : this(blocks, string.Empty, logger)
     {
     }
 
-    public PlaceHolderBlock(List<IBlock> blocks, string text, ILoggerFactory? loggerFactory)
-        : base(BlockTypeKind.PlaceHolder, text, loggerFactory)
+    public PlaceHolderBlock(List<IBlock> blocks, string text, ILogger logger)
+        : base(BlockTypeKind.PlaceHolder, text, logger)
     {
         _blocks = blocks;
-        _functionRenderer = new FunctionRenderer();
+        _functionRenderer = new FunctionRenderer(Logger);
     }
 
     public override bool IsValid(out string errorMsg)
@@ -50,7 +50,7 @@ internal sealed class PlaceHolderBlock : Block
         return true;
     }
 
-    public async Task<string> RenderAsync(ContextVariableDictionary variables, bool isNeedFunctionRun, CancellationToken cancellationToken = default)
+    public override async Task<string> RenderAsync(ContextVariableDictionary variables, bool isNeedFunctionRun, CancellationToken cancellationToken = default)
     {
         if (!_validated && !IsValid(out var error))
         {
@@ -67,7 +67,10 @@ internal sealed class PlaceHolderBlock : Block
             case BlockTypeKind.FunctionId:
             {
                 if (isNeedFunctionRun)
-                    return await _functionRenderer.RenderAsync(_blocks, cancellationToken).ConfigureAwait(false);
+                {
+                    var requestSetting = new LLMRequestSetting();
+                    return await _functionRenderer.RenderAsync(_blocks, requestSetting, cancellationToken).ConfigureAwait(false);
+                }
                 return "{{" + Content + "}}";
             }
             default:
