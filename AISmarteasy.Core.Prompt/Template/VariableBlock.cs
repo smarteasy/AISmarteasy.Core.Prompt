@@ -56,7 +56,7 @@ internal sealed class VariableBlock : Block
         return true;
     }
 
-    public override string Render(ContextVariableDictionary? variables)
+    public override string Render(VariableDictionary? variables)
     {
         if (variables == null) { return string.Empty; }
 

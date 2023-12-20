@@ -1,6 +1,4 @@
-﻿using System.Reflection.Metadata.Ecma335;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
+﻿using Microsoft.Extensions.Logging;
 
 namespace AISmarteasy.Core.Prompt.Template;
 
@@ -19,12 +17,12 @@ internal abstract class Block : IBlock
         Logger = logger;
     }
 
-    public virtual string Render(ContextVariableDictionary? variables)
+    public virtual string Render(VariableDictionary? variables)
     {
         return Content;
     }
 
-    public virtual async Task<string> RenderAsync(ContextVariableDictionary variables, bool isNeedFunctionRun,
+    public virtual async Task<string> RenderAsync(IAIServiceConnector serviceConnector, VariableDictionary variables, bool isNeedFunctionRun,
         CancellationToken cancellationToken = default)
     {
         return await Task.FromResult(string.Empty);

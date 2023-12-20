@@ -7,7 +7,7 @@ public class FunctionRenderer(ILogger? logger)
 {
     private readonly ILogger _logger = logger?? LoggerFactoryProvider.Default.CreateLogger(typeof(FunctionRenderer));
 
-    public async Task<string> RenderAsync(IList<IBlock> blocks, LLMServiceSetting serviceSetting, CancellationToken cancellationToken = default)
+    public async Task<string> RenderAsync(IAIServiceConnector serviceConnector, IList<IBlock> blocks, LLMServiceSetting serviceSetting, CancellationToken cancellationToken = default)
     {
         var functionBlock = (FunctionIdBlock)blocks[0];
         var function = GetFunctionFromPlugins(functionBlock);
@@ -20,12 +20,12 @@ public class FunctionRenderer(ILogger? logger)
 
         if (blocks.Count > 1)
         {
-            KernelProvider.Kernel.Context = PopulateContextWithFunctionArguments(blocks);
+            LLMWorkEnv.WorkerContext = PopulateContextWithFunctionArguments(blocks);
         }
 
         try
         {
-            await function.RunAsync(serviceSetting, cancellationToken).ConfigureAwait(false);
+            await function.RunAsync(serviceConnector, serviceSetting, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -33,18 +33,18 @@ public class FunctionRenderer(ILogger? logger)
             throw;
         }
 
-        return KernelProvider.Kernel.Context.Result;
+        return LLMWorkEnv.WorkerContext.Result;
     }
 
-    private IPluginFunction GetFunctionFromPlugins(FunctionIdBlock functionBlock)
+    private IPluginFunction? GetFunctionFromPlugins(FunctionIdBlock functionBlock)
     {
-        var plugin = KernelProvider.Kernel.Plugins[functionBlock.PluginName];
-        return plugin.GetFunction(functionBlock.FunctionName);
+        var plugin = LLMWorkEnv.PluginStore?.FindPlugin(functionBlock.PluginName);
+        return plugin?.GetFunction(functionBlock.FunctionName);
     }
 
-    public IContext PopulateContextWithFunctionArguments(IList<IBlock> blocks)
+    public IWorkerContext PopulateContextWithFunctionArguments(IList<IBlock> blocks)
     {
-        var contextClone = KernelProvider.Kernel.Context.Clone();
+        var contextClone = LLMWorkEnv.WorkerContext.Clone();
         var firstArg = blocks[1];
 
         _logger.LogTrace("Passing variable/value: `{Content}`", firstArg.Content);
@@ -70,7 +70,7 @@ public class FunctionRenderer(ILogger? logger)
 
             _logger.LogTrace("Passing variable/value: `{Content}`", arg.Content);
 
-            contextClone.Variables.Set(arg.Name, arg.GetValue(KernelProvider.Kernel.Context.Variables));
+            contextClone.Variables.Set(arg.Name, arg.GetValue(LLMWorkEnv.WorkerContext.Variables));
         }
 
         return contextClone;

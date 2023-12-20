@@ -50,7 +50,7 @@ internal sealed class PlaceHolderBlock : Block
         return true;
     }
 
-    public override async Task<string> RenderAsync(ContextVariableDictionary variables, bool isNeedFunctionRun, CancellationToken cancellationToken = default)
+    public override async Task<string> RenderAsync(IAIServiceConnector serviceConnector, VariableDictionary variables, bool isNeedFunctionRun, CancellationToken cancellationToken = default)
     {
         if (!_validated && !IsValid(out var error))
         {
@@ -69,7 +69,7 @@ internal sealed class PlaceHolderBlock : Block
                 if (isNeedFunctionRun)
                 {
                     var requestSetting = new LLMServiceSetting();
-                    return await _functionRenderer.RenderAsync(_blocks, requestSetting, cancellationToken).ConfigureAwait(false);
+                    return await _functionRenderer.RenderAsync(serviceConnector, _blocks, requestSetting, cancellationToken).ConfigureAwait(false);
                 }
                 return "{{" + Content + "}}";
             }

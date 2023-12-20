@@ -44,7 +44,7 @@ internal sealed class ValueBlock : Block
         return true;
     }
 
-    public override string Render(ContextVariableDictionary? variables)
+    public override string Render(VariableDictionary? variables)
     {
         return Value;
     }

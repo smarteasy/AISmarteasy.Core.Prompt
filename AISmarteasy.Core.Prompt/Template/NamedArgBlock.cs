@@ -110,7 +110,7 @@ internal sealed class NamedArgBlock : Block
         return result;
     }
 
-    internal string GetValue(ContextVariableDictionary? variables)
+    internal string GetValue(VariableDictionary? variables)
     {
         var valueIsValidValBlock = _valBlock != null && _valBlock.IsValid(out _);
         if (valueIsValidValBlock)

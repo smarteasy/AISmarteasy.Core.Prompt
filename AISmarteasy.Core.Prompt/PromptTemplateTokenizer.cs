@@ -5,7 +5,6 @@ namespace AISmarteasy.Core.Prompt;
 
 public sealed class PromptTemplateTokenizer(ILogger logger)
 {
-    private readonly ILogger _logger = logger;
     private readonly PlaceHolderTokenizer _placeHolderTokenizer = new(logger);
 
     public IList<IBlock> Tokenize(string promptTemplate)
@@ -125,7 +124,7 @@ public sealed class PromptTemplateTokenizer(ILogger logger)
 
         if (endOfLastBlock < promptTemplate.Length)
         {
-            blocks.Add(new TextBlock(promptTemplate, endOfLastBlock, promptTemplate.Length, _logger));
+            blocks.Add(new TextBlock(promptTemplate, endOfLastBlock, promptTemplate.Length, logger));
         }
 
         return blocks;

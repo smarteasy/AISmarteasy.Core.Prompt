@@ -1,40 +1,32 @@
 ﻿using System.Text;
 using AISmarteasy.Core.Prompt.Template;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace AISmarteasy.Core.Prompt;
 
-public class PromptTemplate : IPromptTemplate
+public class PromptTemplate(string content, ILogger logger) : IPromptTemplate
 {
-    public string Content { get; }
+    public string Content { get; } = content;
+    private protected ILogger Logger { get; } = logger;
 
-    private protected ILogger Logger { get; }
-
-    public PromptTemplate(string content, ILoggerFactory? loggerFactory = null)
-    {
-        Content = content;
-        Logger = loggerFactory is not null ? loggerFactory.CreateLogger(GetType()) : NullLogger.Instance;
-    }
-
-    public async Task<string> RenderAsync(CancellationToken cancellationToken = default)
+    public async Task<string> RenderAsync(IAIServiceConnector serviceConnector, CancellationToken cancellationToken = default)
     {
         Logger.LogTrace("Rendering string template: {0}", Content);
 
         var blocks = ExtractBlocks(Content);
-        return await RenderAsync(blocks, cancellationToken).ConfigureAwait(false);
+        return await RenderAsync(serviceConnector, blocks, cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task<string> RenderAsync(IList<IBlock> blocks, CancellationToken cancellationToken = default)
+    private async Task<string> RenderAsync(IAIServiceConnector serviceConnector, IList<IBlock> blocks, CancellationToken cancellationToken = default)
     {
         Logger.LogTrace("Rendering list of {0} blocks", blocks.Count);
 
-        var context = KernelProvider.Kernel.Context;
+        var context = LLMWorkEnv.WorkerContext;
         var tasks = new List<Task<string>>(blocks.Count);
         foreach (var block in blocks)
         {
             tasks.Add(block.Type == BlockTypeKind.PlaceHolder
-                ? ((PlaceHolderBlock)block).RenderAsync(context.Variables, true, cancellationToken)
+                ? ((PlaceHolderBlock)block).RenderAsync(serviceConnector, context.Variables, true, cancellationToken)
                 : Task.FromResult(block.Render(context.Variables)));
         }
 
