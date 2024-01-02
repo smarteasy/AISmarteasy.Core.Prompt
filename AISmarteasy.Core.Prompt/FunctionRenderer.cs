@@ -51,7 +51,7 @@ public class FunctionRenderer(ILogger logger)
         if (firstArg.Type is not BlockTypeKind.NamedArg)
         {
             string input = blocks[1].Render(contextClone.Variables);
-            contextClone.Variables.Update(input);
+            contextClone.Variables.UpdateInput(input);
             namedArgsStartIndex++;
         }
 
