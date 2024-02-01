@@ -4,5 +4,5 @@ public interface IPromptTemplate
 {
     string Content { get; }
 
-    Task<string> RenderAsync(IAIServiceConnector serviceConnector, CancellationToken cancellationToken = default);
+    Task<string> RenderAsync(ITextCompletionConnector serviceConnector, CancellationToken cancellationToken = default);
 }

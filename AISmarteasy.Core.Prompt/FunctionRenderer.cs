@@ -5,7 +5,7 @@ namespace AISmarteasy.Core.Prompt;
 
 public class FunctionRenderer(ILogger logger)
 {
-    public async Task<string> RenderAsync(IAIServiceConnector serviceConnector, IList<IBlock> blocks, LLMServiceSetting serviceSetting, CancellationToken cancellationToken = default)
+    public async Task<string> RenderAsync(ITextCompletionConnector serviceConnector, IList<IBlock> blocks, LLMServiceSetting serviceSetting, CancellationToken cancellationToken = default)
     {
         var functionBlock = (FunctionIdBlock)blocks[0];
         var function = GetFunctionFromPlugins(functionBlock);

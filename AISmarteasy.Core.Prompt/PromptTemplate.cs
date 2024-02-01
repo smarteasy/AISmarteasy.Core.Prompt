@@ -9,7 +9,7 @@ public class PromptTemplate(string content, ILogger logger) : IPromptTemplate
     public string Content { get; } = content;
     private protected ILogger Logger { get; } = logger;
 
-    public async Task<string> RenderAsync(IAIServiceConnector serviceConnector, CancellationToken cancellationToken = default)
+    public async Task<string> RenderAsync(ITextCompletionConnector serviceConnector, CancellationToken cancellationToken = default)
     {
         Logger.LogTrace("Rendering string template: {0}", Content);
 
@@ -17,7 +17,7 @@ public class PromptTemplate(string content, ILogger logger) : IPromptTemplate
         return await RenderAsync(serviceConnector, blocks, cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task<string> RenderAsync(IAIServiceConnector serviceConnector, IList<IBlock> blocks, CancellationToken cancellationToken = default)
+    private async Task<string> RenderAsync(ITextCompletionConnector serviceConnector, IList<IBlock> blocks, CancellationToken cancellationToken = default)
     {
         Logger.LogTrace("Rendering list of {0} blocks", blocks.Count);
 

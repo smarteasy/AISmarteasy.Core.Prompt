@@ -50,7 +50,7 @@ internal sealed class PlaceHolderBlock : Block
         return true;
     }
 
-    public override async Task<string> RenderAsync(IAIServiceConnector serviceConnector, VariableDictionary variables, bool isNeedFunctionRun, CancellationToken cancellationToken = default)
+    public override async Task<string> RenderAsync(ITextCompletionConnector serviceConnector, VariableDictionary variables, bool isNeedFunctionRun, CancellationToken cancellationToken = default)
     {
         if (!_validated && !IsValid(out var error))
         {

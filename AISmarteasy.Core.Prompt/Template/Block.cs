@@ -2,27 +2,20 @@
 
 namespace AISmarteasy.Core.Prompt.Template;
 
-internal abstract class Block : IBlock
+internal abstract class Block(BlockTypeKind type, string content, ILogger logger) : IBlock
 {
-    public BlockTypeKind Type { get; }
+    public BlockTypeKind Type { get; } = type;
 
-    public string Content { get; }
+    public string Content { get; } = content;
 
-    private protected ILogger Logger { get; }
-
-    protected Block(BlockTypeKind type, string content, ILogger logger)
-    {
-        Type = type;
-        Content = content;
-        Logger = logger;
-    }
+    private protected ILogger Logger { get; } = logger;
 
     public virtual string Render(VariableDictionary? variables)
     {
         return Content;
     }
 
-    public virtual async Task<string> RenderAsync(IAIServiceConnector serviceConnector, VariableDictionary variables, bool isNeedFunctionRun,
+    public virtual async Task<string> RenderAsync(ITextCompletionConnector serviceConnector, VariableDictionary variables, bool isNeedFunctionRun,
         CancellationToken cancellationToken = default)
     {
         return await Task.FromResult(string.Empty);
